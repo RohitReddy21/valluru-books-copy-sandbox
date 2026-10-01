@@ -19,6 +19,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteNav } from "@/components/site-nav";
 import { GlobalSubscribePopup } from "@/components/global-subscribe-popup";
 import { ScrollToTop } from "@/components/scroll-to-top";
+import { SOCIAL_PROFILES } from "@/lib/seo";
 
 const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
 
@@ -174,6 +175,7 @@ export default async function RootLayout({
               url: "https://www.thevalluru.org",
               logo: "https://www.thevalluru.org/valluru-logo.png",
               email: "sasi@theValluru.org",
+              sameAs: SOCIAL_PROFILES,
               author: {
                 "@type": "Person",
                 name: "Sasidhar Valluru"
@@ -189,7 +191,9 @@ export default async function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              name: "Booklets - The Inward Fire Series | The Valluru",
+              // Google shows this as the site name above the result, so it is the brand alone.
+              name: "The Valluru",
+              alternateName: "The Inward Fire Series",
               url: "https://www.thevalluru.org",
               author: {
                 "@type": "Person",

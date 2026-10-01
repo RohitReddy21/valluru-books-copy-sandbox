@@ -1,3 +1,9 @@
+/**
+ * The brand's public profiles, published in the site's structured data so search engines can
+ * tie them to this site. Plain profile addresses only: no share or tracking parameters.
+ */
+export const SOCIAL_PROFILES = ["https://www.instagram.com/theinwardfire/"];
+
 /** Shown in link previews for any page that has no picture of its own. */
 export const DEFAULT_OG_IMAGE = "https://www.thevalluru.org/og/default.jpg";
 
