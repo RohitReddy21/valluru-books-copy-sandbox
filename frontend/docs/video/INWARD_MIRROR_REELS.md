@@ -206,3 +206,33 @@ Every spoken or on-screen line is quoted word for word from the booklet's **free
 >
 > #advaita #vedanta #nonduality #dharma #theinwardmirror #spiritualbooks
 
+
+---
+
+## Finished reels
+
+Seven finished 30-second reels (1080x1920, H.264 with a soft ambient drone, 4 to 6 MB each) are in
+`reels/inward-mirror/`, one per booklet, using each booklet's own cover art with a slow camera
+move, the lines above fading in one at a time, and an end card with the logo and link. They are not
+committed to Git (large binaries).
+
+Make them again, or change a line, with:
+
+```bash
+node backend/scripts/optimize-media.mjs --content live-content.json --out media-optimized
+node backend/scripts/make-reel-videos.mjs --reels frontend/docs/video/inward-mirror-reels.json \
+  --media media-optimized --out reels/inward-mirror
+```
+
+`frontend/docs/video/inward-mirror-reels.json` is the data the tool reads; edit a line there.
+Options: `--only m3` (one reel), `--source background` (the dark plate instead of the cover), `--shade 0.5`
+(darker overlay). It needs ffmpeg and Times New Roman (the other Windows serifs lack the dotted
+letters in Kṛṣṇa and Aṣṭāvakra).
+
+Reel links: `/r/m1` to `/r/m7`, with `?s=bio|story|highlight|dm|comment|shorts_desc` and `&c=<creative>`.
+
+### Upgrading to AI motion later
+
+An AI video tool (for example Higgsfield's Kling 3.0 or Cinema Studio) can replace the still-image
+move with real motion, using each cover as the first frame. At the time of writing one 10-second
+vertical clip costs about 10 to 15 credits, so a 30-second reel is about 30 to 45 credits.

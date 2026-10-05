@@ -30,3 +30,6 @@ chapters-review/
 # production; kept out of the repo because they are large binary derivatives.
 frontend/public/booklet-plates/
 booklet-images/
+
+# Finished videos are large; keep them out of Git.
+reels/
