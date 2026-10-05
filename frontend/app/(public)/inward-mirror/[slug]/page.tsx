@@ -22,7 +22,7 @@ import {
   toCardBooklet
 } from "@/lib/site-content";
 import { getSiteContent } from "@/lib/content-store";
-import { DEFAULT_OG_IMAGE, seoDescription } from "@/lib/seo";
+import { ogImageUrl, seoDescription } from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -65,7 +65,7 @@ export async function generateMetadata({
   const description = seoDescription(
     booklet.seo?.description || getBookletDetailIntro(booklet) || `A booklet from ${series.title}`
   );
-  const ogImage = booklet.coverImage || DEFAULT_OG_IMAGE;
+  const ogImage = ogImageUrl("booklet", bookletPublicSlug(booklet), booklet.coverImage);
   const canonical = `https://www.thevalluru.org${seriesBasePath(series)}/${bookletPublicSlug(booklet)}`;
 
   return {
@@ -145,7 +145,7 @@ export default async function InwardMirrorBookletPage({
   );
 
   const canonicalUrl = `https://www.thevalluru.org${basePath}/${publicSlug}`;
-  const coverImage = booklet.coverImage || "https://www.thevalluru.org/og/default.jpg";
+  const coverImage = ogImageUrl("booklet", publicSlug, booklet.coverImage);
   const backgroundImage = booklet.backgroundImage || media.pageHeroImage;
   const faqItems = getBookletFaqs(booklet);
 

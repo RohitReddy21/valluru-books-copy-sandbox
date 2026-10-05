@@ -32,3 +32,30 @@ export function seoDescription(text: string | undefined, max = META_DESCRIPTION_
   const wordEnd = head.lastIndexOf(" ");
   return `${head.slice(0, wordEnd > 0 ? wordEnd : max).replace(/[,;:\-–—\s]+$/, "")}…`;
 }
+
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.thevalluru.org").replace(/\/$/, "");
+
+/** A short stable tag for a string, used to give a changed cover a new preview address. */
+function shortHash(value: string) {
+  let hash = 5381;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = ((hash << 5) + hash + value.charCodeAt(index)) | 0;
+  }
+
+  return (hash >>> 0).toString(36);
+}
+
+/**
+ * The share and structured-data picture for a booklet or movement: a 1200x630 JPEG of about
+ * 100 KB made by /og/[kind]/[slug], not the 2-3 MB cover PNG it is cut from. WhatsApp and
+ * others drop previews for heavy images. The tag changes whenever the cover does, so a
+ * replaced cover is not stuck behind a year of CDN caching.
+ */
+export function ogImageUrl(kind: "booklet" | "movement", slug: string, source?: string | null) {
+  if (!source) {
+    return DEFAULT_OG_IMAGE;
+  }
+
+  return `${SITE_URL}/og/${kind}/${encodeURIComponent(slug)}?v=${shortHash(source)}`;
+}

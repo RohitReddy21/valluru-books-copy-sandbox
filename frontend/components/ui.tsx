@@ -175,7 +175,7 @@ export function BookletCard({
           {booklet.coverImage ? (
             <>
               <Image
-                alt={booklet.title}
+                alt={`Cover of ${booklet.title}${booklet.numberLabel ? `, ${booklet.numberLabel.trim()}` : ""}`}
                 className="object-cover opacity-90 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-100"
                 fill
                 sizes="(min-width: 1024px) 22rem, (min-width: 768px) 45vw, 92vw"
@@ -255,7 +255,7 @@ export function MovementCard({
           {movement.coverImage ? (
             <>
               <Image
-                alt={movement.title}
+                alt={`Cover art for the movement ${movement.title}`}
                 className="object-cover opacity-90"
                 fill
                 sizes="(min-width: 1024px) 22rem, (min-width: 768px) 45vw, 92vw"
@@ -296,7 +296,7 @@ export function MovementCard({
           {movement.coverImage ? (
             <>
               <Image
-                alt={movement.title}
+                alt={`Cover art for the movement ${movement.title}`}
                 className="object-cover opacity-90 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-100"
                 fill
                 sizes="(min-width: 1024px) 22rem, (min-width: 768px) 45vw, 92vw"

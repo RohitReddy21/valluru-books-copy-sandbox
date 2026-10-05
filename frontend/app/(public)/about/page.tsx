@@ -49,7 +49,7 @@ export default async function AboutPage() {
           <div className="grid gap-10 lg:grid-cols-[450px_1fr] lg:items-start">
             {media.authorImage ? (
               <Image
-                alt={about.title}
+                alt={`Portrait of ${about.title}`}
                 className="w-full h-auto rounded-md border border-gold/20 object-cover shadow-quiet"
                 height={1125}
                 sizes="(min-width: 1024px) 450px, 92vw"

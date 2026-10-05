@@ -12,7 +12,7 @@ import {
   toCardBooklet
 } from "@/lib/site-content";
 import { getSiteContent } from "@/lib/content-store";
-import { DEFAULT_OG_IMAGE, seoDescription } from "@/lib/seo";
+import { ogImageUrl, seoDescription } from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -40,7 +40,7 @@ export async function generateMetadata({
   const title = `${movement.title} — The Valluru`;
   const description = seoDescription(movement.seo?.description || movement.description);
   const url = `https://www.thevalluru.org/movements/${slug}`;
-  const image = movement.coverImage || DEFAULT_OG_IMAGE;
+  const image = ogImageUrl("movement", slug, movement.coverImage);
 
   return {
     title,

@@ -174,7 +174,7 @@ export function ChapterArticle({
             grew from seventeen pages to sixty-eight while it was being read.
           */}
           <Image
-            alt=""
+            alt={`Illustration from “${chapter.title}”`}
             className="rounded-sm"
             height={image.height}
             sizes="(min-width: 1024px) 34rem, 100vw"

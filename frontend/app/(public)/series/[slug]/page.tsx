@@ -22,7 +22,7 @@ import {
   toCardBooklet
 } from "@/lib/site-content";
 import { getSiteContent } from "@/lib/content-store";
-import { DEFAULT_OG_IMAGE, seoDescription } from "@/lib/seo";
+import { ogImageUrl, seoDescription } from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -53,8 +53,8 @@ export async function generateMetadata({
   const description = seoDescription(
     booklet.seo?.description || getBookletDetailIntro(booklet) || "A booklet from The Inward Fire Series"
   );
-  const ogImage = booklet.coverImage || DEFAULT_OG_IMAGE;
   const publicSlug = bookletPublicSlug(booklet);
+  const ogImage = ogImageUrl("booklet", publicSlug, booklet.coverImage);
 
   return {
     title,
@@ -124,7 +124,7 @@ export default async function BookletPage({
   ].filter((item): item is { label: string; booklet: typeof publishedBooklets[number] } => Boolean(item));
 
   const canonicalUrl = `https://www.thevalluru.org/series/${publicSlug}`;
-  const coverImage = booklet.coverImage || "https://www.thevalluru.org/og/default.jpg";
+  const coverImage = ogImageUrl("booklet", publicSlug, booklet.coverImage);
   const backgroundImage = booklet.backgroundImage || media.pageHeroImage;
   const faqItems = getBookletFaqs(booklet);
 
