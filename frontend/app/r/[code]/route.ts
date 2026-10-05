@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSiteContent } from "@/lib/content-store";
-import { bookletPublicSlug, isPublished } from "@/lib/site-content";
+import { bookletPublicSlug, isPublished, seriesBasePath } from "@/lib/site-content";
 
 /**
  * Short links for the content operation: /r/b5?s=story lands on booklet five with UTM
@@ -56,15 +56,17 @@ export async function GET(
     return NextResponse.redirect(new URL("/series", request.url), 307);
   }
 
-  // The Inward Fire series is code-owned at /series; only Inward Mirror carries a
-  // configurable routeSegment.
-  const seriesPath = "/series";
-
-  const match = /^b(\d{1,2})$/i.exec(code);
-  const booklets = content.series.booklets.filter((booklet) => isPublished(booklet.status));
+  // b1.. are the Inward Fire booklets, code-owned at /series. m1..m7 are the Inward Mirror's,
+  // which carry a configurable routeSegment.
+  const match = /^([bm])(\d{1,2})$/i.exec(code);
+  const isMirror = match?.[1].toLowerCase() === "m" && isPublished(content.inwardMirror.status);
+  const seriesPath = isMirror ? seriesBasePath(content.inwardMirror) : "/series";
+  const booklets = (isMirror ? content.inwardMirror.booklets : content.series.booklets).filter(
+    (booklet) => isPublished(booklet.status)
+  );
   // By the number the booklet carries, not its place in the list: publishing a draft that
   // sits earlier in the list must not move every link after it onto a different booklet.
-  const wanted = match ? Number(match[1]) : null;
+  const wanted = match ? Number(match[2]) : null;
   const booklet =
     wanted === null
       ? undefined
