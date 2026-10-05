@@ -236,3 +236,35 @@ Reel links: `/r/m1` to `/r/m7`, with `?s=bio|story|highlight|dm|comment|shorts_d
 An AI video tool (for example Higgsfield's Kling 3.0 or Cinema Studio) can replace the still-image
 move with real motion, using each cover as the first frame. At the time of writing one 10-second
 vertical clip costs about 10 to 15 credits, so a 30-second reel is about 30 to 45 credits.
+
+### Sound
+
+The default sound is a short score made for each reel (`backend/scripts/lib/ambient-score.mjs`): a
+tanpura-style bed on a D drone, a quiet open-fifth pad, and a **singing-bowl strike at the exact
+second each line appears** (lower and longer for the closing line, a soft two-note chord on the end
+card). It is synthesized from scratch, so there is no music licence to worry about. The score is
+also saved on its own as `reels/inward-mirror/music/inward-mirror-mN-score.mp3`, for use in another
+editor. Each reel measures about -17.7 LUFS with no clipping, a good level for Instagram and YouTube.
+
+`--music drone` gives the older plain three-note drone instead.
+
+### Adding a voice
+
+`reels/inward-mirror/timing.json` lists the second each line appears in each reel. To add a voice:
+
+1. Record or generate the lines of one reel as a single file, in order, leaving a natural pause between
+   lines that matches `timing.json` (lines are 4 to 7 seconds apart). Name it `m1.wav` (or `.mp3` /
+   `.m4a`), `m2.wav`, and so on, in one folder.
+2. Make the reels again, pointing at that folder:
+
+```bash
+node backend/scripts/make-reel-videos.mjs --reels frontend/docs/video/inward-mirror-reels.json \
+  --media media-optimized --out reels/inward-mirror --voice-dir voice
+```
+
+The music lowers by itself while the voice speaks and comes back in the pauses. A reel with no file in
+the folder keeps music only.
+
+Whose voice: the author reading his own lines is the most honest choice for this work. A calm,
+slow AI narrator is the alternative; avoid the two voices built into Windows (David, Zira), which sound
+mechanical and would undercut the writing.

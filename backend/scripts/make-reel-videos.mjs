@@ -13,7 +13,9 @@
  * Garamond are missing the dotted letters in names like Kṛṣṇa and Aṣṭāvakra.
  */
 import { copyFile, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { synthScore } from "./lib/ambient-score.mjs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -31,6 +33,9 @@ const fontPath = option("font", "C:/Windows/Fonts/times.ttf");
 const italicPath = option("italic", "C:/Windows/Fonts/timesi.ttf");
 const logoPath = option("logo", "frontend/public/valluru-logo-sm.png");
 // "cover" is the vivid cover art, "background" the dark atmospheric plate; shade is the black overlay.
+const music = option("music", "score"); // "score" (composed to the lines) or "drone"
+const voiceDir = option("voice-dir"); // optional folder holding <id>.wav|mp3|m4a recordings
+const timings = [];
 const source = option("source", "cover");
 const shade = option("shade", "0.42");
 
@@ -141,9 +146,57 @@ for (const reel of reels) {
     `[c1]drawtext=fontfile=serif.ttf:textfile=cta1.txt:fontcolor=${GOLD}:fontsize=42:x=(w-text_w)/2:y=1040:enable='gte(t,${cardStart})':alpha='${cardFade}'[c2]`,
     `[c2]drawtext=fontfile=serif.ttf:textfile=cta2.txt:fontcolor=${PARCHMENT}:fontsize=56:x=(w-text_w)/2:y=1120:enable='gte(t,${cardStart})':alpha='${cardFade}'[c3]`,
     `[c3]drawtext=fontfile=serifi.ttf:textfile=cta3.txt:fontcolor=${PARCHMENT}@0.75:fontsize=38:x=(w-text_w)/2:y=1210:enable='gte(t,${cardStart})':alpha='${cardFade}',format=yuv420p[v]`,
-    // A quiet drone: three low sines, slow tremolo, gentle fade in and out. Original, no licence.
-    `[2:a][3:a][4:a]amix=inputs=3:weights='1 0.55 0.4':normalize=0,tremolo=f=0.11:d=0.3,lowpass=f=700,afade=t=in:d=2.5,afade=t=out:st=${TOTAL - 3}:d=3,volume=0.55[a]`
   );
+
+  // Sound: a score composed to this reel's timeline (default), or the plain three-sine drone,
+  // plus an optional voice recording that ducks the music while it speaks.
+  const audioArgs = [];
+  let inputs = 2;
+  const reverb = "aecho=0.8:0.85:70|150|290:0.30|0.20|0.12,lowpass=f=6500";
+
+  if (music === "drone") {
+    for (const frequency of [110, 164.81, 220]) {
+      audioArgs.push("-f", "lavfi", "-t", String(TOTAL), "-i", `sine=frequency=${frequency}`);
+    }
+
+    filters.push(
+      `[2:a][3:a][4:a]amix=inputs=3:weights='1 0.55 0.4':normalize=0,tremolo=f=0.11:d=0.3,lowpass=f=700,afade=t=in:d=2.5,afade=t=out:st=${TOTAL - 3}:d=3,volume=0.55[m]`
+    );
+    inputs = 5;
+  } else {
+    const events = [
+      ...lines.map((line, index) => ({ t: line.start, kind: index === lines.length - 1 ? "payoff" : "line" })),
+      { t: cardStart, kind: "card" }
+    ];
+
+    await writeFile(path.join(work, "score.wav"), synthScore({ total: TOTAL, events }));
+    audioArgs.push("-i", "score.wav");
+    filters.push(`[2:a]${reverb},volume=0.8[m]`);
+    inputs = 3;
+  }
+
+  const voiceFile = voiceDir
+    ? [".wav", ".mp3", ".m4a"].map((ext) => path.join(voiceDir, `${reel.id}${ext}`)).find((file) => existsSync(file))
+    : undefined;
+
+  if (voiceFile) {
+    const voiceName = `voice${path.extname(voiceFile)}`;
+    await copyFile(voiceFile, path.join(work, voiceName));
+    audioArgs.push("-i", voiceName);
+    filters.push(
+      `[${inputs}:a]aformat=sample_rates=44100:channel_layouts=stereo,asplit=2[vs][vm]`,
+      `[m][vs]sidechaincompress=threshold=0.03:ratio=10:attack=15:release=600[duck]`,
+      `[duck][vm]amix=inputs=2:normalize=0,alimiter=limit=0.95,atrim=duration=${TOTAL}[a]`
+    );
+  } else {
+    filters.push(`[m]alimiter=limit=0.95[a]`);
+  }
+
+  timings.push({
+    id: reel.id,
+    lines: lines.map((line) => ({ text: line.text, start: +line.start.toFixed(2), end: +line.end.toFixed(2) })),
+    endCardStart: cardStart
+  });
 
   const output = path.resolve(outDir, `inward-mirror-${reel.id}.mp4`);
   const run = spawnSync(
@@ -152,9 +205,7 @@ for (const reel of reels) {
       "-y", "-hide_banner", "-loglevel", "error",
       "-loop", "1", "-framerate", "30", "-t", String(TOTAL), "-i", "bg.webp",
       "-loop", "1", "-framerate", "30", "-t", String(TOTAL), "-i", "logo.png",
-      "-f", "lavfi", "-t", String(TOTAL), "-i", "sine=frequency=110",
-      "-f", "lavfi", "-t", String(TOTAL), "-i", "sine=frequency=164.81",
-      "-f", "lavfi", "-t", String(TOTAL), "-i", "sine=frequency=220",
+      ...audioArgs,
       "-filter_complex", filters.join(";"),
       "-map", "[v]", "-map", "[a]",
       "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-r", "30", "-pix_fmt", "yuv420p",
@@ -170,5 +221,18 @@ for (const reel of reels) {
     continue;
   }
 
-  console.log(`${reel.id}: ${path.relative(process.cwd(), output)}`);
+  // The score on its own, for editing apps that want the music without the video.
+  if (music !== "drone") {
+    await mkdir(path.resolve(outDir, "music"), { recursive: true });
+    spawnSync(
+      "ffmpeg",
+      ["-y", "-hide_banner", "-loglevel", "error", "-i", "score.wav", "-af", `${reverb},volume=0.8,alimiter=limit=0.95`, "-b:a", "192k", path.resolve(outDir, "music", `inward-mirror-${reel.id}-score.mp3`)],
+      { cwd: work }
+    );
+  }
+
+  console.log(`${reel.id}: ${path.relative(process.cwd(), output)}${voiceFile ? " (with voice)" : ""}`);
 }
+
+// When each line appears: record a voice track against this and drop it in --voice-dir.
+await writeFile(path.resolve(outDir, "timing.json"), `${JSON.stringify(timings, null, 2)}\n`, "utf8");
